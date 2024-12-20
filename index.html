@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MasMusica - Alternative universe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #2c3e50;
+            color: white;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            margin-top: 50px;
+        }
+        #player {
+            margin-top: 20px;
+            width: 80%;
+            max-width: 600px;
+            background-color: #34495e;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        #player audio {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>MasMusica - Alternative universe</h1>
+    <div id="player">
+        <audio id="audioPlayer" controls>
+            <source id="audioSource" src="" type="audio/mpeg">
+            Tu navegador no soporta el reproductor de audio.
+        </audio>
+    </div>
+
+    <script>
+        // Función que maneja la lista de reproducción
+        function loquesigue() {
+            // Leer el archivo 'pl.lst' (simulado en el código por un array)
+            fetch('pl.lst')
+                .then(response => response.text())
+                .then(data => {
+                    let lines = data.split('\n').filter(line => line.trim() !== '');
+                    if (lines.length > 0) {
+                        let currentTrack = lines[0].trim();
+                        // Cambiar el src del reproductor
+                        document.getElementById('audioSource').src = currentTrack;
+                        // Reemplazar el contenido de 'pl.lst' y mover el archivo procesado a 'pld.lst'
+                        lines.shift(); // Eliminar el primer renglón
+                        let updatedPlLst = lines.join('\n');
+                        // Escribir 'updatedPlLst' en pl.lst y mover el archivo procesado a 'pld.lst'
+                        fetch('pld.lst', { method: 'POST', body: currentTrack + '\n' });
+                        fetch('pl.lst', { method: 'POST', body: updatedPlLst });
+                    } else {
+                        // Si 'pl.lst' está vacío, intercambiar con 'pld.lst'
+                        fetch('pld.lst')
+                            .then(response => response.text())
+                            .then(backupData => {
+                                fetch('pl.lst', { method: 'POST', body: backupData });
+                            });
+                    }
+                });
+        }
+
+        // Monitorear el cambio en el 'src' y comenzar la reproducción
+        function controlplayer() {
+            let player = document.getElementById('audioPlayer');
+            player.addEventListener('play', () => {
+                let src = document.getElementById('audioSource').src;
+                if (src) {
+                    console.log('Reproduciendo: ' + src);
+                }
+            });
+        }
+
+        // Detectar si la canción ha terminado y ejecutar 'loquesigue'
+        function controlsig() {
+            let player = document.getElementById('audioPlayer');
+            player.addEventListener('ended', () => {
+                loquesigue();  // Reproducir la siguiente canción
+            });
+        }
+
+        // Ejecutar las funciones cuando cargue el documento
+        window.onload = () => {
+            controlplayer();
+            controlsig();
+            loquesigue();
+        };
+    </script>
+</body>
+</html>
